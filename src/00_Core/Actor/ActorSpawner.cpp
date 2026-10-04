@@ -49,14 +49,14 @@ ARM s32 ActorSpawner::Spawn(ActorTypeId type, Vec3p *pos, ActorSpawnOptions *opt
             }
             return -1;
         }
-        actor->mType                = type;
-        (*actorSlot)->mRef.id       = actorManager->mNextActorId;
-        (*actorSlot)->mRef.index    = index;
-        (*actorSlot)->mUnk_014      = *pos;
-        (*actorSlot)->mUnk_020      = options->mUnk_00;
-        (*actorSlot)->mAngle        = options->mAngle;
-        (*actorSlot)->mTargetAngle  = options->mAngle;
-        (*actorSlot)->mUnk_074      = GetCardinal(options->mAngle);
+        actor->mType                    = type;
+        (*actorSlot)->mRef.id           = actorManager->mNextActorId;
+        (*actorSlot)->mRef.index        = index;
+        (*actorSlot)->mUnk_014          = *pos;
+        (*actorSlot)->mSpawnParams      = options->mUnk_00;
+        (*actorSlot)->mAngle            = options->mAngle;
+        (*actorSlot)->mTargetAngle      = options->mAngle;
+        (*actorSlot)->mUnk_074          = GetCardinal(options->mAngle);
         if (options->mUnk_18 >= 0xffff) {
             (*actorSlot)->mUnk_03c = -1;
         } else {
