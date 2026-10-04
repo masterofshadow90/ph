@@ -1,113 +1,366 @@
-#pragma once
+#include "Actor/Player/ActorRefill.hpp"
+#include "DTCM/UnkStruct_027e0d38.hpp"
+#include "DTCM/UnkStruct_027e0e58.hpp"
+#include "DTCM/UnkStruct_027e103c.hpp"
+#include "Item/ItemManager.hpp"
+#include "System/Random.hpp"
+#include "Unknown/UnkStruct_020eec9c.hpp"
 
-#include "global.h"
-#include "types.h"
+static char *sShipTypes[8] = {"anc", "bow", "hul", "can", "dco", "pdl", "fnl", "brg"};
 
-#include "Actor/Actor.hpp"
-#include "Actor/ActorType.hpp"
+extern u32 **data_027e0fe0[];
+ARM ActorRefillBombs *ActorRefillBombs::Create() {
+    return new(*data_027e0fe0[0], 4) ActorRefillBombs();
+}
+ActorType ActorRefillBombs::gType = ActorType(ActorTypeId_RefillBombs, (ActorCreateFunc) ActorRefillBombs::Create, NULL);
 
-class ActorRefill : public Actor {
-public:
-    /* 000 (base) */
-    /* 158 */ unk32 mUnk_158;
-    /* 15c */ unk32 mUnk_15c;
-    /* 160 */ unk32 mUnk_160;
-    /* 164 */ u8 mUnk_164;
-    /* 165 */ unk8 mUnk_165[0x3];
-    /* 168 */
+ARM ActorRefillBombchus *ActorRefillBombchus::Create() {
+    return new(*data_027e0fe0[0], 4) ActorRefillBombchus();
+}
+ActorType ActorRefillBombchus::gType =
+    ActorType(ActorTypeId_RefillBombchus, (ActorCreateFunc) ActorRefillBombchus::Create, NULL);
 
-public:
-    ActorRefill(unk32 param1);
+ARM ActorRefillArrows *ActorRefillArrows::Create() {
+    return new(*data_027e0fe0[0], 4) ActorRefillArrows();
+}
+ActorType ActorRefillArrows::gType = ActorType(ActorTypeId_RefillArrows, (ActorCreateFunc) ActorRefillArrows::Create, NULL);
 
-    /* 00 */ virtual ~ActorRefill() override;
-    /* 08 */ virtual bool Init() override;
-    /* 14 */ virtual void vfunc_14(u32 param1) override;
-    /* 20 */ virtual void vfunc_20(bool param1) override;
-    /* b4 */ virtual ItemFlag GetAmmoItem() = 0;
-    /* b8 */
+ARM ActorRefillTime *ActorRefillTime::Create() {
+    return new(*data_027e0fe0[0], 4) ActorRefillTime();
+}
+ActorType ActorRefillTime::gType = ActorType(ActorTypeId_RefillTime, (ActorCreateFunc) ActorRefillTime::Create, NULL);
 
-    bool func_ov014_02135364(unk32 param1);
-    void func_ov014_02135474();
-};
+ARM ActorLSTM *ActorLSTM::Create() {
+    return new(*data_027e0fe0[0], 4) ActorLSTM();
+}
+ActorType ActorLSTM::gType = ActorType(ActorTypeId_LSTM, (ActorCreateFunc) ActorLSTM::Create, NULL);
 
-class ActorRefillBombs : public ActorRefill {
-public:
-    static ActorType gType;
+ARM ActorRefill::ActorRefill(unk32 param1) :
+    mUnk_158(0),
+    mUnk_15c(0x56),
+    mUnk_160(param1),
+    mUnk_164(0x1f) {}
 
-    /* 000 (base) */
-    /* 168 */
+ARM ActorRefill::~ActorRefill() {}
 
-public:
-    ActorRefillBombs();
-    static ActorRefillBombs *Create();
+ARM bool ActorRefill::Init() {
+    ItemManager *itemManager;
 
-    /* 00 */ virtual ~ActorRefillBombs() override;
-    /* b4 */ virtual ItemFlag GetAmmoItem() override;
-    /* b8 */
-};
+    if (this->GetAmmoItem() == ItemFlag_None) {
+        if (data_027e0d38->func_ov000_02078b40() != 3) {
+            return false;
+        }
+    } else {
+        ItemManager *itemManager = gItemManager;
+        ItemFlag item            = this->GetAmmoItem();
+        if (!itemManager->HasItem(item)) {
+            return false;
+        }
+    }
+    mHitbox.pos.x          = 0;
+    mHitbox.pos.y          = FLOAT_TO_Q20(0.3);
+    mHitbox.pos.z          = 0;
+    mHitbox.size           = FLOAT_TO_Q20(0.3);
+    mUnk_08c.pos.x         = mHitbox.pos.x;
+    mUnk_08c.pos.y         = mHitbox.pos.y;
+    mUnk_08c.pos.z         = mHitbox.pos.z;
+    mUnk_08c.size          = mHitbox.size;
+    mUnk_0a4.mUnk_04.pos.x = 0;
+    mUnk_0a4.mUnk_04.pos.y = FLOAT_TO_Q20(0.3);
+    mUnk_0a4.mUnk_04.pos.z = 0;
+    mUnk_0a4.mUnk_04.size  = FLOAT_TO_Q20(1.3);
+    mUnk_09c.mUnk_0 &= ~0xa4;
+    mUnk_09c.mUnk_3 = 1;
+    mMaxFall        = mUnk_08c.size + -1;
+    this->func_ov014_02135364(0);
+    return true;
+}
 
-class ActorRefillBombchus : public ActorRefill {
-public:
-    static ActorType gType;
+ARM void ActorRefill::vfunc_14(u32 param1) {
+    s32 temp_r0_4;
+    s32 temp_r6;
+    s8 var_r0;
+    u32 temp_r0;
+    u32 temp_r0_3;
+    u32 temp_r1;
+    Vec3p *temp_r0_2;
 
-    /* 000 (base) */
-    /* 168 */
+    if (this->func_ov00_020c313c(param1) != 0) {
+        this->IncreaseActiveFrames();
+        temp_r0 = mUnk_130;
+        switch (temp_r0) {
+            case 0:
+                this->ApplyGravity();
+                temp_r0_2 = &mPos;
+                Vec3p_Add(temp_r0_2, &mVel, temp_r0_2);
+                this->func_01fffd04(0);
+                if (mTouchingWall || mUnk_112 || mUnk_113) {
+                    mVel.x = 0;
+                    mVel.z = 0;
+                }
+                if (mTouchingFloor) {
+                    this->func_ov014_02135364(1);
+                } else if (this->func_ov00_020c2c0c()) {
+                    this->func_ov014_02135364(4);
+                } else if (this->func_ov00_020c2d54()) {
+                    this->func_ov014_02135364(5);
+                }
+                break;
+            case 1:
+            case 2:
+            case 4:
+            case 5:
+                if (this->CollidesWithPlayer(PlayerCollide_PickupFlags) != 0) {
+                    if (this->GetAmmoItem() == -1) {
+                        data_027e103c->func_ov000_020cfbf0(mUnk_158 * 60, 1, 0);
+                    } else {
+                        ItemManager *itemManager = gItemManager;
+                        itemManager->GiveAmmo(this->GetAmmoItem(), mUnk_158);
+                    }
+                    data_ov000_020eec9c.func_ov000_020d7ad4(0x100);
+                    this->func_ov014_02135364(3);
+                } else {
+                    temp_r0_3 = mUnk_130;
+                    switch (temp_r0_3) {
+                        case 0:
+                        case 3:
+                            break;
+                        case 1:
+                            if (this->func_ov00_020c2c0c()) {
+                                this->func_ov014_02135364(4);
+                            } else if (this->func_ov00_020c2d54()) {
+                                this->func_ov014_02135364(5);
+                            } else if (mActiveFrames >= 180) {
+                                this->func_ov014_02135364(2);
+                            }
+                            break;
+                        case 2:
+                            if (mActiveFrames % 8 < 4) {
+                                mUnk_164 = 0;
+                            } else {
+                                mUnk_164 = 31;
+                            }
+                            if (this->func_ov00_020c2c0c()) {
+                                this->func_ov014_02135364(4);
+                            } else if (this->func_ov00_020c2d54()) {
+                                this->func_ov014_02135364(5);
+                            } else if (mActiveFrames >= 60) {
+                                this->func_ov014_02135364(3);
+                            }
+                            break;
+                        case 4:
+                            if (!this->func_ov00_020c2c70()) {
+                                this->func_ov014_02135364(1);
+                            }
+                            break;
+                        case 5:
+                            if (!this->func_ov00_020c2de4()) {
+                                this->func_ov014_02135364(1);
+                            }
+                            break;
+                    }
+                }
+                break;
+        }
+        this->KillInBounds();
+    }
+    mUnk_0a4.func_ov000_0207a1c8(param1, &mPos);
+}
 
-public:
-    ActorRefillBombchus();
-    static ActorRefillBombchus *Create();
+ARM bool ActorRefill::func_ov014_02135364(unk32 param1) {
+    mUnk_130      = param1;
+    mUnk_164      = 31;
+    mActiveFrames = 0;
+    switch (mUnk_130) {
+        case 0:
+        case 2:
+            break;
+        case 1:
+            mVel.x = 0;
+            mVel.y = 0;
+            mVel.z = 0;
+            break;
+        case 3:
+            this->Kill();
+            break;
+    }
+    return true;
+}
 
-    /* 00 */ virtual ~ActorRefillBombchus() override;
-    /* b4 */ virtual ItemFlag GetAmmoItem() override;
-    /* b8 */
-};
+extern "C" void func_0202bc38(bool param1, Vec3p *pos, unk32 param2, Actor_UnkStruct_012 *param3, unk32 param4);
+extern u32 data_ov000_020e9370[];
+extern "C" void func_ov005_02102c2c(u32 *param_1, int param_2, Vec3p *param_3, int param_4, int param_5, u32 param_6,
+                                    int param_7, char param_8, char param_9, char param_10);
+ARM void ActorRefill::vfunc_20(bool param1) {
+    bool var_r0;
 
-class ActorRefillArrows : public ActorRefill {
-public:
-    static ActorType gType;
+    if (param1) {
+        var_r0 = mUnk_0a4.mUnk_01;
+    } else {
+        var_r0 = mUnk_0a4.mUnk_00;
+    }
+    if (var_r0 && mUnk_164 != 0) {
+        Actor_UnkStruct_012 sp18;
+        sp18.mUnk_04 = 5;
+        sp18.mUnk_08 = 2;
+        sp18.mUnk_0c = 2;
+        sp18.mUnk_14 = 0x800;
+        sp18.mUnk_18 = 0x1000;
+        sp18.mUnk_02 = mUnk_164;
+        func_0202bc38(param1, &mPos, mUnk_15c, &sp18, 0);
+        func_ov005_02102c2c(&data_ov000_020e9370[0], 0, &mPos, 0x400, 0x400, 0, mUnk_164, 0, 0, 1);
+    }
+}
 
-    /* 000 (base) */
-    /* 168 */
+ARM void ActorRefill::func_ov014_02135474() {
+    s32 iVar1 = mUnk_130;
+    if (iVar1 != 4 && iVar1 != 5) {
+        data_027e0e58->func_ov000_0207c1b0(0x241, &mPos, 2, 0, 0);
+        data_027e0e58->func_ov000_0207c1b0(0x242, &mPos, 2, 0, 0);
+        mAlive = false;
+    }
+}
 
-public:
-    ActorRefillArrows();
-    static ActorRefillArrows *Create();
+ARM ActorRefillBombs::ActorRefillBombs() :
+    ActorRefill(0) {
+    mUnk_158 = 3;
+    mUnk_15c = 0x2e;
+}
 
-    /* 00 */ virtual ~ActorRefillArrows() override;
-    /* b4 */ virtual ItemFlag GetAmmoItem() override;
-    /* b8 */
-};
+ARM ActorRefillBombs::~ActorRefillBombs() {}
 
-class ActorRefillTime : public ActorRefill {
-public:
-    static ActorType gType;
+ARM ItemFlag ActorRefillBombs::GetAmmoItem() {
+    return ItemFlag_BombBag;
+}
 
-    /* 000 (base) */
-    /* 168 */
+ARM ActorRefillBombchus::ActorRefillBombchus() :
+    ActorRefill(1) {
+    mUnk_158 = 3;
+    mUnk_15c = 0x2f;
+}
 
-public:
-    ActorRefillTime();
-    static ActorRefillTime *Create();
+ARM ActorRefillBombchus::~ActorRefillBombchus() {}
 
-    /* 00 */ virtual ~ActorRefillTime() override;
-    /* 08 */ virtual bool Init() override;
-    /* b4 */ virtual ItemFlag GetAmmoItem() override;
-    /* b8 */
-};
+ARM ItemFlag ActorRefillBombchus::GetAmmoItem() {
+    return ItemFlag_BombchuBag;
+}
 
-class ActorLSTM : public ActorRefill {
-public:
-    static ActorType gType;
+ARM ActorRefillArrows::ActorRefillArrows() :
+    ActorRefill(2) {
+    mUnk_158 = 5;
+    mUnk_15c = 0x2d;
+}
 
-    /* 000 (base) */
-    /* 168 */
+ARM ActorRefillArrows::~ActorRefillArrows() {}
 
-public:
-    ActorLSTM();
-    static ActorLSTM *Create();
+ARM ItemFlag ActorRefillArrows::GetAmmoItem() {
+    return ItemFlag_Bow;
+}
 
-    /* 00 */ virtual ~ActorLSTM() override;
-    /* 08 */ virtual bool Init() override;
-    /* b4 */ virtual ItemFlag GetAmmoItem() override;
-    /* b8 */
-};
+ARM ActorRefillTime::ActorRefillTime() :
+    ActorRefill(3) {
+    mUnk_158 = 5;
+    mUnk_15c = 0x44;
+}
+
+ARM ActorRefillTime::~ActorRefillTime() {}
+
+ARM bool ActorRefillTime::Init() {
+    if (!ActorRefill::Init()) {
+        return false;
+    }
+    switch (mSpawnParams.mUnk_00[0]) {
+        case 2:
+            mUnk_158 = 5;
+            break;
+        case 4:
+            mUnk_158 = 15;
+            break;
+        case 5:
+            mUnk_158 = 30;
+            break;
+        default:
+        case 0:
+        case 1:
+        case 3:
+            s32 temp_ip = gRandom.Next(0, 10);
+            if (temp_ip >= 9) {
+                mUnk_158 = 30;
+            } else if (temp_ip >= 6) {
+                mUnk_158 = 15;
+            } else {
+                mUnk_158 = 5;
+            }
+            break;
+    }
+    switch (mUnk_158) {
+        case 15:
+            mUnk_15c = 0x45;
+            break;
+        case 30:
+            mUnk_15c = 0x46;
+            break;
+        default:
+            mUnk_15c = 0x44;
+            break;
+    }
+    return true;
+}
+
+ARM ItemFlag ActorRefillTime::GetAmmoItem() {
+    return ItemFlag_None;
+}
+
+ARM ActorLSTM::ActorLSTM() :
+    ActorRefill(3) {
+    mUnk_158 = -5;
+    mUnk_15c = 0x47;
+}
+
+ARM ActorLSTM::~ActorLSTM() {}
+
+ARM bool ActorLSTM::Init() {
+    if (!ActorRefill::Init()) {
+        return false;
+    }
+    switch (mSpawnParams.mUnk_00[0]) {
+        case 2:
+            mUnk_158 = -5;
+            break;
+        case 4:
+            mUnk_158 = -15;
+            break;
+        case 5:
+            mUnk_158 = -30;
+            break;
+        default:
+        case 0:
+        case 1:
+        case 3:
+            s32 temp_ip = gRandom.Next(0, 10);
+            if (temp_ip >= 9) {
+                mUnk_158 = -30;
+            } else if (temp_ip >= 6) {
+                mUnk_158 = -15;
+            } else {
+                mUnk_158 = -5;
+            }
+            break;
+    }
+    switch (mUnk_158) {
+        case -15:
+            mUnk_15c = 0x48;
+            break;
+        case -30:
+            mUnk_15c = 0x49;
+            break;
+        default:
+            mUnk_15c = 0x47;
+            break;
+    }
+    return true;
+}
+
+ARM ItemFlag ActorLSTM::GetAmmoItem() {
+    return ItemFlag_None;
+}
