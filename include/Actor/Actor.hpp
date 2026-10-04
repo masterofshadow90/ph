@@ -110,7 +110,7 @@ public:
     /* 011 */ u8 mMapPosY;
     /* 012 */ unk16 mTargetAngle;
     /* 014 */ Vec3p mUnk_014;
-    /* 020 */ Actor_UnkStruct_020 mUnk_020;
+    /* 020 */ Actor_UnkStruct_020 mSpawnParams;
     /* 034 */ ActorRef mUnk_034;
     /* 03c */ unk32 mUnk_03c;
     /* 040 */ ActorRef mUnk_040;
