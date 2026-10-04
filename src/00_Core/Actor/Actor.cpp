@@ -47,9 +47,9 @@ ARM Actor_UnkStruct_020::Actor_UnkStruct_020() :
 ARM Actor::Actor() :
     mType(ActorTypeId_Null),
     mRef(-1, -1),
-    mUnk_010(0),
-    mUnk_011(0),
-    mUnk_012(0),
+    mMapPosX(0),
+    mMapPosY(0),
+    mTargetAngle(0),
     mUnk_034(-1, -1),
     mUnk_03c(-1),
     mUnk_040(-1, -1),
@@ -134,7 +134,7 @@ ARM unk32 Actor::vfunc_38() {
 }
 
 ARM unk8 Actor::func_ov00_020c1788() {
-    return gMapManager->func_ov00_02083570(mUnk_010, mUnk_011);
+    return gMapManager->func_ov00_02083570(mMapPosX, mMapPosY);
 }
 
 ARM s32 Actor::vfunc_2c() {
