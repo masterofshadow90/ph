@@ -5,8 +5,6 @@
 //     at the start of the vtable, but the original binary has no header.
 //   - Destructor order is inverted: original has D0, D1; mwccarm emits D1, D0.
 // TODO: pending review before renaming:
-//     mUnk_010  ->  mMapPosX
-//     mUnk_011  ->  mMapPosY
 //     mUnk_012  ->  mTargetAngle
 //     mUnk_020  ->  mSpawnParams
 
@@ -82,7 +80,7 @@ void ActorGenericCharacter::vfunc_c4() {
         }
 
         if (mUnk_484 != 0) {
-            mAngle = mUnk_012;
+            mAngle = mTargetAngle;
             mUnk_1d8.mUnk_020.mUnk_8d = 0; 
             return;
         }
@@ -233,7 +231,7 @@ void ActorGenericCharacter::func_ov014_02147c98() {
         u8 pad1[8];
     };
 
-    unk32 idx = *(unk32*)&mUnk_010;
+    unk32 idx = *(unk32*)&mMapPosX;
 
     TargetStruct* base = (TargetStruct*)mType;
     TargetStruct& element = base[idx];
